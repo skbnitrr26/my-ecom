@@ -48,6 +48,7 @@ public class AppConfig {
                 CorsConfiguration cfg = new CorsConfiguration();
                 cfg.setAllowedOrigins(Arrays.asList(
                         "https://sam-kart.netlify.app",
+                        "https://sam-market-zeta.vercel.app/",
                         "http://localhost:3000",
                         "http://localhost:5173"));
                 cfg.setAllowedMethods(Collections.singletonList("*"));
