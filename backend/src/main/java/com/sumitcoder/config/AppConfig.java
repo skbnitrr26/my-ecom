@@ -1,12 +1,11 @@
 package com.sumitcoder.config;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List; // Ensure this import is present
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // <-- ADD THIS IMPORT
+import org.springframework.http.HttpMethod; // Ensure this import is present
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,9 +16,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // <-- Using this for the Bean approach
-
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -31,55 +28,49 @@ public class AppConfig {
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(Authorize -> Authorize
                         
-                        // FIX 1: Allow all OPTIONS requests for CORS preflight
+                        // Rule 1: Allow all OPTIONS requests (for CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
                         
-                        // FIX 2: Order rules from most specific to least specific
+                        // Rule 2: Allow specific public API endpoints
                         .requestMatchers("/api/products/*/reviews").permitAll()
-                        .requestMatchers("/auth/**").permitAll() // Assuming your auth endpoints are here
-                        .requestMatchers("/home/**").permitAll() // Assuming your home endpoints are here
-                        .requestMatchers("/coupons/**").permitAll() // Assuming coupon endpoints are public
-                        .requestMatchers("/api/**").authenticated() // Secure the rest of the API
                         
-                        .anyRequest().permitAll() // Allow other non-API requests (if any)
+                        // Rule 3: Allow all authentication, home, coupon endpoints etc.
+                        .requestMatchers("/auth/**").permitAll() 
+                        .requestMatchers("/home/**").permitAll() 
+                        .requestMatchers("/coupons/**").permitAll() 
+                        
+                        // Rule 4: Secure the rest of the /api endpoints
+                        .requestMatchers("/api/**").authenticated() 
+                        
+                        // Rule 5: Allow any other requests (like root /, static assets if not handled elsewhere)
+                        .anyRequest().permitAll() 
                 )
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())); // Use the Bean below
+                // Only one .cors() call, using the Bean defined below
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())); 
 
         return http.build();
     }
 
-    // CORS Configuration Bean (Slightly improved structure)
+    // CORS Configuration Bean
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Define allowed origins
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://sam-market-zeta.vercel.app",
-                "https://sam-kart.netlify.app", // Keep old one just in case
+                "https://sam-kart.netlify.app", 
                 "http://localhost:3000",
                 "http://localhost:5173"
         ));
-        
-        // Allow all standard methods including OPTIONS
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); 
-        
-        // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true); 
-        
-        // Allow all headers
         configuration.setAllowedHeaders(Arrays.asList("*")); 
-        
-        // Expose the Authorization header so frontend can read JWTs
         configuration.setExposedHeaders(Arrays.asList("Authorization")); 
-        
-        // How long the results of a preflight request can be cached
         configuration.setMaxAge(3600L); 
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply this configuration to all paths
         source.registerCorsConfiguration("/**", configuration); 
         return source;
     }
