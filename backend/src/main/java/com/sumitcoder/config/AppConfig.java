@@ -23,36 +23,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class AppConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        // Keep CSRF disabled
+        .csrf(csrf -> csrf.disable())
 
-        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(Authorize -> Authorize
-                        
-                        // Rule 1: Allow all OPTIONS requests (for CORS preflight)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-                        
-                        // Rule 2: Allow specific public API endpoints
-                        .requestMatchers("/api/products/*/reviews").permitAll()
-                        
-                        // Rule 3: Allow all authentication, home, coupon endpoints etc.
-                        .requestMatchers("/auth/**").permitAll() 
-                        .requestMatchers("/home/**").permitAll() 
-                        .requestMatchers("/coupons/**").permitAll() 
-                        
-                        // Rule 4: Secure the rest of the /api endpoints
-                        .requestMatchers("/api/**").authenticated() 
-                        
-                        // Rule 5: Allow any other requests (like root /, static assets if not handled elsewhere)
-                        .anyRequest().permitAll() 
-                )
-                .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
-                .csrf(csrf -> csrf.disable())
-                // Only one .cors() call, using the Bean defined below
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())); 
+        // Keep CORS enabled using your existing Bean
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-        return http.build();
-    }
+        // TEMPORARILY ALLOW ALL REQUESTS - NO SECURITY
+        .authorizeHttpRequests(auth -> auth
+            .anyRequest().permitAll()
+        );
 
+    // REMOVE session management and JWT filter FOR THIS TEST
+
+    return http.build();
+}
     // CORS Configuration Bean
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
