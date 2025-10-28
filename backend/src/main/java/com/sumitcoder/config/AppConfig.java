@@ -23,42 +23,57 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class AppConfig {
 
     @Bean
-SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        // Keep CSRF disabled
-        .csrf(csrf -> csrf.disable())
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        // Keep CORS enabled using your existing Bean
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(Authorize -> Authorize
 
-        // TEMPORARILY ALLOW ALL REQUESTS - NO SECURITY
-        .authorizeHttpRequests(auth -> auth
-            .anyRequest().permitAll()
-        );
+                        // Rule 1: Allow all OPTIONS requests (for CORS preflight)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-    // REMOVE session management and JWT filter FOR THIS TEST
+                        // Rule 2: Explicitly allow the Actuator health endpoint for Render
+                        .requestMatchers("/actuator/health").permitAll() // <-- THE NEW LINE
 
-    return http.build();
-}
+                        // Rule 3: Allow specific public API endpoints
+                        .requestMatchers("/api/products/*/reviews").permitAll()
+
+                        // Rule 4: Allow all authentication, home, coupon endpoints etc. (Adjust paths as needed)
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/home/**").permitAll()
+                        .requestMatchers("/coupons/**").permitAll()
+
+                        // Rule 5: Secure the rest of the /api endpoints
+                        .requestMatchers("/api/**").authenticated()
+
+                        // Rule 6: Allow any other requests (like root /, static assets if not handled elsewhere)
+                        .anyRequest().permitAll()
+                )
+                .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())); // Use the Bean below
+
+        return http.build();
+    }
+
     // CORS Configuration Bean
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
+
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://sam-market-zeta.vercel.app",
-                "https://sam-kart.netlify.app", 
+                "https://sam-kart.netlify.app",
                 "http://localhost:3000",
                 "http://localhost:5173"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); 
-        configuration.setAllowCredentials(true); 
-        configuration.setAllowedHeaders(Arrays.asList("*")); 
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); 
-        configuration.setMaxAge(3600L); 
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); 
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
