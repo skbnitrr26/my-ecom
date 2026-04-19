@@ -115,10 +115,20 @@ const AddressPage = () => {
                     <section className='border rounded-md'>
                         <PricingCard />
                         <div className='p-5'>
-                            <Button
-                                onClick={handleCreateOrder} sx={{ py: "11px" }}
-                                variant='contained' fullWidth>Checkout</Button>
-                        </div>
+    {user.user?.addresses && user.user.addresses.length > 0 ? (
+        <Button
+            onClick={handleCreateOrder} sx={{ py: "11px" }}
+            variant='contained' fullWidth>Checkout
+        </Button>
+    ) : (
+        <Button
+            disabled
+            sx={{ py: "11px" }}
+            variant='contained' fullWidth>
+            Please Add a Delivery Address
+        </Button>
+    )}
+</div>
                     </section>
 
                 </div>
