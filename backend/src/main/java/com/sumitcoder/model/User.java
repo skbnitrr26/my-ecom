@@ -31,8 +31,9 @@ public class User {
 
     private USER_ROLE role;
 
-    @OneToMany
-    private Set<Address> addresses=new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
+    private Set<Address> addresses = new HashSet<>();
 
     @JsonIgnore
     @ManyToMany

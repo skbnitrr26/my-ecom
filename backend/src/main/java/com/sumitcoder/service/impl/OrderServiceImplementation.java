@@ -34,13 +34,18 @@ public class OrderServiceImplementation implements OrderService {
 	@Override
 	public Set<Order> createOrder(User user, Address shippAddress, Cart cart) {
 		
+		Address address;
 //		shippAddress.setUser(user);
-		if(!user.getAddresses().contains(shippAddress)){
-			user.getAddresses().add(shippAddress);
-		}
+		if (shippAddress.getId() == null) {
+        address = addressRepository.save(shippAddress);
+        user.getAddresses().add(address);
+        userRepository.save(user); 
+    } else {
+        address = shippAddress;
+    }
 
 
-		Address address= addressRepository.save(shippAddress);
+		
 
 
 
