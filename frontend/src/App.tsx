@@ -24,6 +24,7 @@ import { createHomeCategories, fetchHomePageData } from './Redux Toolkit/Custome
 import { homeCategories } from './data/homeCategories';
 import Mobile from './data/Products/mobile';
 import AboutSection from './customer/components/Footer/AboutSection';
+import PaymentSuccessHandler from './customer/pages/Pyement/PaymentSuccessHandler';
 
 function App() {
   const dispatch = useAppDispatch()
@@ -59,6 +60,8 @@ const navigate=useNavigate();
           <Route path='/dummy' element={<Mobile />} />
 
           <Route path='*' element={<CustomerRoutes />} />
+
+          <Route path='/payment-success/:orderId' element={<PaymentSuccessHandler />} />
 
         </Routes>
         
