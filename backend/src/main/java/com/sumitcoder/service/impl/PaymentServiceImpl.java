@@ -139,7 +139,7 @@ public class PaymentServiceImpl implements PaymentService {
             paymentLinkRequest.put("reminder_enable", true);
 
             // Set the callback URL and method
-            paymentLinkRequest.put("callback_url", "http://https://sam-kart.netlify.app//payment-success/" + orderId);
+            paymentLinkRequest.put("callback_url", "https://sam-kart.netlify.app//payment-success/" + orderId);
             paymentLinkRequest.put("callback_method", "get");
 
             PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
